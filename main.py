@@ -7,10 +7,11 @@ import pygame.draw
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
-pygame.display.set_caption("Random walker + Self avoiding")
+pygame.display.set_caption("Random walker - Self Avoiding")
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+
 
 class Spot:
     def __init__(self, row, col, width):
@@ -26,6 +27,7 @@ class Spot:
         self.center_y = self.y + width / 2
         self.comeFrom = None
         self.directions = [[1, 0, False], [0, 1, False], [-1, 0, False], [0, -1, False]]
+        self.final = True
         shuffle(self.directions)
 
     def get_center(self):
@@ -40,7 +42,7 @@ class Spot:
 
     def draw(self, win):
         if self.visited:
-            pygame.draw.circle(win, WHITE, (self.center_x, self.center_y), self.rad)
+            pygame.draw.circle(win, self.color, (self.center_x, self.center_y), self.rad)
             if self.comeFrom is not None:
                 self.draw_line(win, self.comeFrom)
         else:
@@ -48,10 +50,19 @@ class Spot:
 
     def draw_line(self, win, fr):
         frx, fry = fr.get_center()
-        pygame.draw.line(win, WHITE, (frx, fry), (self.center_x, self.center_y), 2)
+        pygame.draw.line(win, self.color, (frx, fry), (self.center_x, self.center_y), 2)
 
     def is_visited(self):
         return self.visited
+
+    def make_final(self):
+        if self.final:
+            self.color = (150, 23, 69)
+        else:
+            self.make_reverse()
+
+    def make_reverse(self):
+        self.color = (64, 224, 208)
 
     def un_visited(self):
         self.visited = False
@@ -110,8 +121,20 @@ def algorithm(draw, path, grid, rows):
         else:
             next_spot.visit(cur)
             path.append(next_spot)
-
+    haha = []
+    while len(path) > 0:
+        cur = path.pop()
+        cur.make_final()
+        if cur.final:
+            cur.final = False
+        else:
+            cur.final = True
+        haha.append(cur)
+        time.sleep(0.1)
         draw()
+        if len(path) == 0:
+            path = haha.copy()
+            haha = []
 
 
 def get_next_spot(current, grid, rows):
@@ -128,13 +151,11 @@ def get_next_spot(current, grid, rows):
 
 
 def main(win):
-    rows = 5
-    width = 800
+    rows = 6
     grid = make_grid(rows, 800)
     start = grid[2][2]
     start.visited = True
-    path = []
-    path.append(start)
+    path = [start]
     draw(win, grid, rows)
     while True:
         for event in pygame.event.get():
